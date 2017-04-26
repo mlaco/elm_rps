@@ -1,5 +1,6 @@
 import Html exposing (..)
--- import Html.Events exposing (..)
+import Html.Attributes exposing (style)
+import Html.Events exposing (onClick)
 
 
 main =
@@ -9,8 +10,8 @@ main =
     , update = update
     , subscriptions = subscriptions
     }
-    
-    
+
+
 -- MODEL
 
 type Throw
@@ -28,8 +29,8 @@ type alias Model =
   { player1 : Player
   , player2 : Player
   }
-  
-  
+
+
 init : (Model, Cmd Msg)
 init =
   let
@@ -39,30 +40,94 @@ init =
       Model player1 player2
   in
     ( newModel , Cmd.none )
-    
-    
+
+
 -- UPDATE
 
-type Msg = Submit
-  
+type Msg
+  = Start
+  | ThrowRock
+  | ThrowPaper
+  | ThrowScissors
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Submit ->
+    Start ->
       ( model , Cmd.none )
-        
-        
+    ThrowRock ->
+      let
+        player1 =
+          { score = 1
+          , throw = Rock
+          }
+        player2 = model.player2
+        newModel =
+          { player1 = player1
+          , player2 = player2
+          }
+      in
+        ( newModel , Cmd.none )
+    ThrowPaper ->
+      ( model , Cmd.none )
+    ThrowScissors ->
+      ( model , Cmd.none )
+
+
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.none
-  
-  
+
+
 -- VIEW
 
 view : Model -> Html Msg
 view model =
-  div
-    [ ]
-    [ text ( toString model.player1.score ) ]
+  let
+    myStyle = style
+      [ ("background-color", "#333")
+      , ("color" , "#eee")
+      ]
+    divStyle = style
+      [ ("margin-left" ,  "auto")
+      , ("margin-right" ,  "auto")
+      , ("width" , "60%")
+      , ("padding-top", "50px")
+      ]
+  in
+    body
+     [ myStyle ]
+     [
+      div
+        [ divStyle ]
+        [ div
+            [ ]
+            [ text
+                ( "Score: "
+                ++ ( toString model.player1.score )
+                ++ " | "
+                ++ ( toString model.player2.score )
+                )
+            ]
+        , div
+            [ ]
+            [ text
+                ( "Throws: "
+                ++ ( toString model.player1.throw )
+                ++ " | "
+                ++ ( toString model.player2.throw )
+                )
+            ]
+        , button
+            [ onClick ThrowRock ]
+            [ text "Rock" ]
+        , button
+            [ onClick ThrowRock ]
+            [ text "Paper" ]
+        , button
+            [ onClick ThrowRock ]
+            [ text "Scissors" ]
+        ]
+     ]
