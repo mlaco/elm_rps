@@ -58,20 +58,27 @@ update msg model =
     ThrowRock ->
       let
         player1 =
-          { score = 1
+          { score = model.player1.score + 1
           , throw = Rock
           }
-        player2 = model.player2
-        newModel =
-          { player1 = player1
-          , player2 = player2
+      in
+        ( { model | player1 = player1 } , Cmd.none )
+    ThrowPaper ->
+      let
+        player1 =
+          { score = model.player1.score + 1
+          , throw = Paper
           }
       in
-        ( newModel , Cmd.none )
-    ThrowPaper ->
-      ( model , Cmd.none )
+        ( { model | player1 = player1 } , Cmd.none )
     ThrowScissors ->
-      ( model , Cmd.none )
+      let
+        player1 =
+          { score = model.player1.score + 1
+          , throw = Scissors
+          }
+      in
+        ( { model | player1 = player1 } , Cmd.none )
 
 
 -- SUBSCRIPTIONS
@@ -124,10 +131,10 @@ view model =
             [ onClick ThrowRock ]
             [ text "Rock" ]
         , button
-            [ onClick ThrowRock ]
+            [ onClick ThrowPaper ]
             [ text "Paper" ]
         , button
-            [ onClick ThrowRock ]
+            [ onClick ThrowScissors ]
             [ text "Scissors" ]
         ]
      ]
