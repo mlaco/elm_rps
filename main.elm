@@ -10,6 +10,9 @@ main =
     , update = update
     , subscriptions = subscriptions
     }
+    
+    
+-- LOGIC
 
 
 -- MODEL
@@ -55,10 +58,12 @@ update msg model =
       ( model , Cmd.none )
     ThrowThrow throw ->
       let
-        oldPlayer1 = model.player1
-        player1 = { oldPlayer1 | throw = throw }
+        p1 = model.player1
+        newP1 = { p1 | throw = throw }
       in
-        ( { model | player1 = player1 } , Cmd.none )
+        ( { model | player1 = newP1 } , Cmd.none )
+    AiThrow ->
+      ( model , Cmd.none )
         
 
 -- SUBSCRIPTIONS
