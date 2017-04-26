@@ -46,40 +46,20 @@ init =
 
 type Msg
   = Start
-  | ThrowRock
-  | ThrowPaper
-  | ThrowScissors
+  | ThrowThrow Throw
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Start ->
       ( model , Cmd.none )
-    ThrowRock ->
+    ThrowThrow throw ->
       let
-        player1 =
-          { score = model.player1.score + 1
-          , throw = Rock
-          }
+        oldPlayer1 = model.player1
+        player1 = { oldPlayer1 | throw = throw }
       in
         ( { model | player1 = player1 } , Cmd.none )
-    ThrowPaper ->
-      let
-        player1 =
-          { score = model.player1.score + 1
-          , throw = Paper
-          }
-      in
-        ( { model | player1 = player1 } , Cmd.none )
-    ThrowScissors ->
-      let
-        player1 =
-          { score = model.player1.score + 1
-          , throw = Scissors
-          }
-      in
-        ( { model | player1 = player1 } , Cmd.none )
-
+        
 
 -- SUBSCRIPTIONS
 
@@ -128,13 +108,13 @@ view model =
                 )
             ]
         , button
-            [ onClick ThrowRock ]
+            [ onClick (ThrowThrow Rock) ]
             [ text "Rock" ]
         , button
-            [ onClick ThrowPaper ]
+            [ onClick (ThrowThrow Paper) ]
             [ text "Paper" ]
         , button
-            [ onClick ThrowScissors ]
+            [ onClick (ThrowThrow Scissors) ]
             [ text "Scissors" ]
         ]
      ]
