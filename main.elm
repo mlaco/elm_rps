@@ -47,23 +47,19 @@ init =
 
 -- UPDATE
 
+-- "Throw" is both a verb and noun in RPS, so ThrowThrow means you Throw (v) a Throw (n), (e.g. "throw rock")
 type Msg
-  = Start
-  | ThrowThrow Throw
+  = ThrowThrow Throw
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Start ->
-      ( model , Cmd.none )
     ThrowThrow throw ->
       let
         p1 = model.player1
         newP1 = { p1 | throw = throw }
       in
         ( { model | player1 = newP1 } , Cmd.none )
-    AiThrow ->
-      ( model , Cmd.none )
         
 
 -- SUBSCRIPTIONS
