@@ -16,11 +16,7 @@ main =
 
 -- MODEL
 
-type Throw
-  = Rock
-  | Paper
-  | Scissors
-  | None
+type alias Throw = Int
 
 type alias Player =
   { score : Int
@@ -36,8 +32,8 @@ type alias Model =
 init : (Model, Cmd Msg)
 init =
   let
-    player1 = Player 0 None
-    player2 = Player 0 None
+    player1 = Player 0 0
+    player2 = Player 0 0
     newModel =
       Model player1 player2
   in
@@ -46,31 +42,9 @@ init =
 
 -- LOGIC
 
-throwArray : Array Throw
-throwArray =
-  fromList
-    [ Rock
-    , Paper
-    , Scissors
-    , None
-    ]
-
-getFromThrowArray : Int -> Throw
-getFromThrowArray n =
-  let
-    elem =
-      case ( get n throwArray ) of
-        Just a ->
-          a
-        Nothing ->
-          None
-  in
-    elem
-
-
 throwGenerator : Generator Throw
 throwGenerator =
-  Random.map getFromThrowArray ( int 0 2 )
+  int 0 2
 
 calculateScores : Player -> Player -> Model
 calculateScores p1 p2 =
@@ -158,13 +132,13 @@ view model =
                 )
             ]
         , button
-            [ onClick (ThrowThrow Rock) ]
+            [ onClick (ThrowThrow 0) ]
             [ text "Rock" ]
         , button
-            [ onClick (ThrowThrow Paper) ]
+            [ onClick (ThrowThrow 1) ]
             [ text "Paper" ]
         , button
-            [ onClick (ThrowThrow Scissors) ]
+            [ onClick (ThrowThrow 2) ]
             [ text "Scissors" ]
         ]
      ]
