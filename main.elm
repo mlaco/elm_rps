@@ -1,6 +1,8 @@
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+import Random exposing (int, Generator, map)
+import Array exposing (..)
 
 
 main =
@@ -10,9 +12,6 @@ main =
     , update = update
     , subscriptions = subscriptions
     }
-    
-    
--- LOGIC
 
 
 -- MODEL
@@ -45,11 +44,40 @@ init =
     ( newModel , Cmd.none )
 
 
+-- LOGIC
+
+throwArray : Array Throw
+throwArray =
+  fromList [ Rock
+  , Paper
+  , Scissors
+  , None
+  ]
+
+getFromThrowArray : Int -> Throw
+getFromThrowArray n =
+  let
+    elem =
+      case ( get n throwArray ) of
+        Just a ->
+          a
+        Nothing ->
+          None
+  in
+    elem
+
+
+throwGenerator : Generator Throw
+throwGenerator =
+  Random.map getFromThrowArray ( int 0 2 )
+
+
 -- UPDATE
 
 -- "Throw" is both a verb and noun in RPS, so ThrowThrow means you Throw (v) a Throw (n), (e.g. "throw rock")
 type Msg
   = ThrowThrow Throw
+  | AiThrow Throw
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -59,8 +87,15 @@ update msg model =
         p1 = model.player1
         newP1 = { p1 | throw = throw }
       in
-        ( { model | player1 = newP1 } , Cmd.none )
-        
+        ( { model | player1 = newP1 } , Random.generate AiThrow throwGenerator )
+
+    AiThrow throw ->
+      let
+        p2 = model.player2
+        newP2 = { p2 | throw = throw }
+      in
+        ( { model | player2 = newP2 } , Cmd.none )
+
 
 -- SUBSCRIPTIONS
 
