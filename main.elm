@@ -4,7 +4,6 @@ import Html.Events exposing (onClick)
 import Random exposing (int, Generator, map)
 import Array exposing (..)
 
-
 main =
   Html.program
     { init = init
@@ -49,13 +48,25 @@ throwGenerator =
 calculateScores : Player -> Player -> Model
 calculateScores p1 p2 =
   let
-    throw1 = p1.throw
-    throw2 = p2.throw
+    (score1 , score2) =
+      case ( 3 + p1.throw - p2.throw ) % 3 of
+        1 ->
+          (p1.score + 1 , p2.score)
+        2 ->
+          (p1.score , p2.score + 1)
+        _ ->
+          (p1.score , p2.score)
+
+    newP1 = { p1 | score = score1 }
+    newP2 = { p2 | score = score2 }
   in
-    { player1 = p1
-    , player2 = p2
+    { player1 = newP1
+    , player2 = newP2
     }
 
+translateThrow : Int -> Maybe String
+translateThrow n  =
+  get n (fromList ["Rock","Paper","Scissors"])
 
 
 -- UPDATE
@@ -126,9 +137,9 @@ view model =
             [ ]
             [ text
                 ( "Throws: "
-                ++ ( toString model.player1.throw )
+                ++ ( toString (translateThrow model.player1.throw) )
                 ++ " | "
-                ++ ( toString model.player2.throw )
+                ++ ( toString (translateThrow model.player2.throw) )
                 )
             ]
         , button
