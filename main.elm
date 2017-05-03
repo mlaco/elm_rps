@@ -48,11 +48,12 @@ init =
 
 throwArray : Array Throw
 throwArray =
-  fromList [ Rock
-  , Paper
-  , Scissors
-  , None
-  ]
+  fromList
+    [ Rock
+    , Paper
+    , Scissors
+    , None
+    ]
 
 getFromThrowArray : Int -> Throw
 getFromThrowArray n =
@@ -70,6 +71,17 @@ getFromThrowArray n =
 throwGenerator : Generator Throw
 throwGenerator =
   Random.map getFromThrowArray ( int 0 2 )
+
+calculateScores : Player -> Player -> Model
+calculateScores p1 p2 =
+  let
+    throw1 = p1.throw
+    throw2 = p2.throw
+  in
+    { player1 = p1
+    , player2 = p2
+    }
+
 
 
 -- UPDATE
@@ -91,10 +103,12 @@ update msg model =
 
     AiThrow throw ->
       let
+        p1 = model.player1
         p2 = model.player2
-        newP2 = { p2 | throw = throw }
+        p2NewThrow = { p2 | throw = throw }
+        newModel = ( calculateScores p1 p2NewThrow )
       in
-        ( { model | player2 = newP2 } , Cmd.none )
+        ( newModel , Cmd.none )
 
 
 -- SUBSCRIPTIONS
