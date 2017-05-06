@@ -3,6 +3,10 @@ import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Random exposing (int, Generator, map)
 import Array exposing (..)
+import Phoenix.Socket as Socket exposing (Socket)
+import Phoenix.Channel as Channel
+import Phoenix.Push as Push
+import Json.Encode as JE
 
 main =
   Html.program
@@ -25,6 +29,8 @@ type alias Player =
 type alias Model =
   { player1 : Player
   , player2 : Player
+  , socket : Socket.Socket Msg
+  , connected : Bool
   }
 
 
@@ -33,10 +39,23 @@ init =
   let
     player1 = Player 0 0
     player2 = Player 0 0
-    newModel =
-      Model player1 player2
   in
-    ( newModel , Cmd.none )
+    ( { player1 = player1
+      , player2 = player2
+      , socket = socketInit
+      , connected = False
+      }
+    , Cmd.none )
+
+
+-- Multiplayer
+
+socketInit : Socket Msg
+socketInit =
+  "ws://localhost:4000/socket/websocket"
+  |> Socket.init
+--|> Socket.on "new:msg" "rooms:lobby" ReceiveChatMessage
+-- Something like this ^
 
 
 -- LOGIC
@@ -45,9 +64,11 @@ throwGenerator : Generator Throw
 throwGenerator =
   int 0 2
 
-calculateScores : Player -> Player -> Model
-calculateScores p1 p2 =
+calculateScores : Model -> Model
+calculateScores model =
   let
+    p1 = model.player1
+    p2 = model.player2
     (score1 , score2) =
       case ( 3 + p1.throw - p2.throw ) % 3 of
         1 ->
@@ -60,13 +81,16 @@ calculateScores p1 p2 =
     newP1 = { p1 | score = score1 }
     newP2 = { p2 | score = score2 }
   in
-    { player1 = newP1
+    { model
+    | player1 = newP1
     , player2 = newP2
     }
 
-translateThrow : Int -> Maybe String
+translateThrow : Int -> String
 translateThrow n  =
-  get n (fromList ["Rock","Paper","Scissors"])
+  case get n (fromList ["Rock","Paper","Scissors"]) of
+    Just a -> a
+    Nothing -> "Nothing"
 
 
 -- UPDATE
@@ -91,7 +115,12 @@ update msg model =
         p1 = model.player1
         p2 = model.player2
         p2NewThrow = { p2 | throw = throw }
-        newModel = ( calculateScores p1 p2NewThrow )
+        tempModel =
+          { model
+          | player1 = p1
+          , player2 = p2NewThrow
+          }
+        newModel = ( calculateScores tempModel )
       in
         ( newModel , Cmd.none )
 
@@ -101,6 +130,10 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.none
+  -- if model.connected then
+  --   Sub.batch
+  -- else
+  --   Socket.listen model.socket PhoenixMsg
 
 
 -- VIEW
@@ -137,9 +170,9 @@ view model =
             [ ]
             [ text
                 ( "Throws: "
-                ++ ( toString (translateThrow model.player1.throw) )
+                ++ ( (translateThrow model.player1.throw) )
                 ++ " | "
-                ++ ( toString (translateThrow model.player2.throw) )
+                ++ ( (translateThrow model.player2.throw) )
                 )
             ]
         , button
