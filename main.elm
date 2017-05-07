@@ -56,7 +56,10 @@ socketInit =
   |> Socket.init
 --|> Socket.on "new:msg" "rooms:lobby" ReceiveChatMessage
 -- Something like this ^
+-- I believe the arguments go:
+-- message, channel, handler
 
+-- Socket.on registers event handlers
 
 -- LOGIC
 
@@ -99,6 +102,10 @@ translateThrow n  =
 type Msg
   = ThrowThrow Throw
   | AiThrow Throw
+  | JoinGame
+  | JoinedGame JE.Value
+  | LeftGame JE.Value
+  | PhoenixMsg (Socket.Msg Msg)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -123,6 +130,29 @@ update msg model =
         newModel = ( calculateScores tempModel )
       in
         ( newModel , Cmd.none )
+    JoinGame -> joinGameUpdate model
+    JoinedGame game -> ({ model | connected = True}, Cmd.none)
+    LeftGame game -> ({ model | connected = False}, Cmd.none)
+    PhoenixMsg msg -> phoenixUpdate msg model
+
+
+joinGameUpdate : Model -> ( Model , Cmd Msg )
+joinGameUpdate model =
+  let
+    game = Debug.log "topic" "game:lobby"
+    channel = Channel.init game
+              |> Channel.onJoin JoinedGame
+              |> Channel.onClose LeftGame
+    ( socket, phxCmd ) = Socket.join channel model.socket
+  in
+    ( { model | socket = socket } , Cmd.map PhoenixMsg phxCmd )
+
+phoenixUpdate : Socket.Msg Msg -> Model -> ( Model, Cmd Msg )
+phoenixUpdate msg model =
+  let
+    ( socket, phxCmd ) = Socket.update msg model.socket
+  in
+    ( { model | socket = socket } , Cmd.map PhoenixMsg phxCmd )
 
 
 -- SUBSCRIPTIONS
@@ -130,10 +160,10 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.none
-  -- if model.connected then
-  --   Sub.batch
-  -- else
-  --   Socket.listen model.socket PhoenixMsg
+--   if model.connected then
+--     Sub.batch
+--   else
+--     Socket.listen model.socket PhoenixMsg
 
 
 -- VIEW
@@ -155,34 +185,41 @@ view model =
     body
      [ myStyle ]
      [
-      div
-        [ divStyle ]
-        [ div
-            [ ]
-            [ text
-                ( "Score: "
-                ++ ( toString model.player1.score )
-                ++ " | "
-                ++ ( toString model.player2.score )
-                )
-            ]
-        , div
-            [ ]
-            [ text
-                ( "Throws: "
-                ++ ( (translateThrow model.player1.throw) )
-                ++ " | "
-                ++ ( (translateThrow model.player2.throw) )
-                )
-            ]
-        , button
-            [ onClick (ThrowThrow 0) ]
-            [ text "Rock" ]
-        , button
-            [ onClick (ThrowThrow 1) ]
-            [ text "Paper" ]
-        , button
-            [ onClick (ThrowThrow 2) ]
-            [ text "Scissors" ]
-        ]
+       div
+         [ divStyle ]
+         [ div
+             [ ]
+             [ text
+                 ( "Score: "
+                 ++ ( toString model.player1.score )
+                 ++ " | "
+                 ++ ( toString model.player2.score )
+                 )
+             ]
+         , div
+             [ ]
+             [ text
+                 ( "Throws: "
+                 ++ ( (translateThrow model.player1.throw) )
+                 ++ " | "
+                 ++ ( (translateThrow model.player2.throw) )
+                 )
+             ]
+         , button
+             [ onClick (ThrowThrow 0) ]
+             [ text "Rock" ]
+         , button
+             [ onClick (ThrowThrow 1) ]
+             [ text "Paper" ]
+         , button
+             [ onClick (ThrowThrow 2) ]
+             [ text "Scissors" ]
+         ]
+       , div
+         [ divStyle ]
+         [
+           button
+             [ onClick JoinGame ]
+             [ text "Join" ]
+         ]
      ]
