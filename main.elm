@@ -4,6 +4,7 @@ import Msg exposing (..)
 import Multiplayer exposing (..)
 import GameView exposing (..)
 
+import Phoenix.Socket as Socket exposing (Socket)
 import Html exposing (..)
 import Json.Encode as JE
 import Array exposing (..)
@@ -30,14 +31,14 @@ init =
       }
     , Cmd.none )
 
-    
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.none
---   if model.connected then
---     Sub.batch
---   else
---     Socket.listen model.socket PhoenixMsg
+  Socket.listen model.socket PhoenixMsg
+  --   if model.connected then
+  --     Sub.batch
+  --   else
+  --     Socket.listen model.socket PhoenixMsg
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -47,12 +48,9 @@ update msg model =
       let
         p1 = model.player1
         newP1 = { p1 | throw = throw }
-        
-        -- Tell server our throw
-        (socket, phxMsg) = sendThrowToServer model.socket newP1
-        
+        newModel = { model | player1 = newP1 }
       in
-        ( model, Cmd.map PhoenixMsg phxMsg)
+        sendThrowToServer newModel.socket newModel
 
     JoinGame -> joinGameUpdate model
     JoinedGame game -> ({model | connected = True}, Cmd.none)

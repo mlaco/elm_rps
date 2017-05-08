@@ -19,16 +19,19 @@ socketInit =
 
 -- Socket.on registers event handlers
 
-sendThrowToServer : Socket.Socket Msg -> Player -> (Socket.Socket Msg, Cmd (Socket.Msg Msg))
-sendThrowToServer socket player =
+sendThrowToServer : Socket.Socket Msg -> Model -> ( Model, Cmd Msg )
+sendThrowToServer socket model =
   let
+    player = model.player1
     payload = Debug.log "payload" (toString player.throw)
     payloadJSON = (JE.object [("payload", JE.string payload)])
     cargo = Push.init "update" "game:lobby"
             |> Push.withPayload payloadJSON
 
+    (newSocket, phxMsg) = Socket.push cargo socket
+
   in
-    Socket.push cargo socket
+    ( { model | socket = newSocket } , Cmd.map PhoenixMsg phxMsg)
 
 joinGameUpdate : Model -> ( Model , Cmd Msg )
 joinGameUpdate model =
