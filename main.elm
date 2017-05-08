@@ -61,6 +61,17 @@ socketInit =
 
 -- Socket.on registers event handlers
 
+sendThrowToServer : Socket.Socket Msg -> Player -> (Socket.Socket Msg, Cmd (Socket.Msg Msg))
+sendThrowToServer socket player =
+  let
+    payload = Debug.log "payload" (toString player.throw)
+    payloadJSON = (JE.object [("payload", JE.string payload)])
+    cargo = Push.init "update" "game:lobby"
+            |> Push.withPayload payloadJSON
+            
+  in
+    Socket.push cargo socket
+
 -- LOGIC
 
 throwGenerator : Generator Throw
@@ -114,6 +125,14 @@ update msg model =
       let
         p1 = model.player1
         newP1 = { p1 | throw = throw }
+        
+        -- Tell server our throw
+        --
+        -- (Note: This call doesn't affect the game at all currently I am doing
+        -- this to learn how to perform socket operations Once successful, we'll
+        -- replace the random AiThrow with the opponent's throw via the server)
+        (a , b) = sendThrowToServer model.socket newP1
+        
       in
         ( { model | player1 = newP1 } , Random.generate AiThrow throwGenerator )
 
