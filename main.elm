@@ -131,10 +131,10 @@ update msg model =
         -- (Note: This call doesn't affect the game at all currently I am doing
         -- this to learn how to perform socket operations Once successful, we'll
         -- replace the random AiThrow with the opponent's throw via the server)
-        (a , b) = sendThrowToServer model.socket newP1
+        (socket, phxMsg) = sendThrowToServer model.socket newP1
         
       in
-        ( { model | player1 = newP1 } , Random.generate AiThrow throwGenerator )
+        ( model, Cmd.map PhoenixMsg phxMsg)
 
     AiThrow throw ->
       let
@@ -149,6 +149,7 @@ update msg model =
         newModel = ( calculateScores tempModel )
       in
         ( newModel , Cmd.none )
+        
     JoinGame -> joinGameUpdate model
     JoinedGame game -> ({ model | connected = True}, Cmd.none)
     LeftGame game -> ({ model | connected = False}, Cmd.none)
